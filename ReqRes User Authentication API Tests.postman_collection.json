@@ -1,0 +1,373 @@
+{
+  "info": {
+    "_postman_id": "a1b12695-4113-4447-8e21-41737c1084a3",
+    "name": "ReqRes User Authentication API Tests Copy 2",
+    "description": "Automated API test cases for the ReqRes.in user authentication endpoint.\n\n⚠️ SETUP REQUIRED: ReqRes now requires an API key.\nGet a free key at https://app.reqres.in/api-keys and paste it into the\n`api_key` collection variable (Collection → Variables tab).\n\nCovers:\n- TC-01: Valid Login (200 OK + token)\n- TC-02: Invalid Login (400 + error message)\n- TC-03: Missing Password (400 + error message)\n- TC-04: Missing Email (400 + error message)\n\nBonus: Data-driven testing via Collection Runner with CSV.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "30016915"
+  },
+  "item": [
+    {
+      "name": "Login Scenarios",
+      "item": [
+        {
+          "name": "TC-01: Valid Login",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const key = pm.collectionVariables.get('api_key') || pm.environment.get('api_key');",
+                  "if (!key) {",
+                  "    console.warn('⚠️  api_key is not set. Get a free key at https://app.reqres.in/api-keys');",
+                  "}",
+                  "pm.environment.unset('auth_token');"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-01 | API key is configured (not placeholder)', function () {",
+                  "    const key = pm.collectionVariables.get('api_key') || pm.environment.get('api_key');",
+                  "    pm.expect(key, 'api_key collection variable is missing').to.exist.and.have.length.above(0);",
+                  "});",
+                  "",
+                  "pm.test('TC-01 | Status code is 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('TC-01 | Response time is under 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('TC-01 | Content-Type is application/json', function () {",
+                  "    pm.response.to.have.header('Content-Type');",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('TC-01 | Response body contains a token field', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('token');",
+                  "});",
+                  "",
+                  "pm.test('TC-01 | Token is a non-empty string', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string').and.to.have.length.above(0);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.environment.set('auth_token', json.token);",
+                  "    console.log('Token stored:', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "inherit"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "pub_215d1baef769f99ff76f945d9f30354ca5e77a800e2eb283faf5f372b5efdcfe",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"eve.holt@reqres.in\",\n    \"password\": \"cityslicka\"\n}"
+            },
+            "url": {
+              "raw": "https://reqres.in/api/login",
+              "protocol": "https",
+              "host": [
+                "reqres",
+                "in"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Sends valid credentials. Asserts 200 OK and a non-empty token in the response body."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-02: Invalid Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-02 | Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC-02 | Response time is under 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('TC-02 | Content-Type is application/json', function () {",
+                  "    pm.response.to.have.header('Content-Type');",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('TC-02 | Response body contains an error field', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test('TC-02 | Error message is \"user not found\"', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error.toLowerCase()).to.equal('user not found');",
+                  "});",
+                  "",
+                  "pm.test('TC-02 | Response does NOT contain a token', function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "inherit"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "pub_215d1baef769f99ff76f945d9f30354ca5e77a800e2eb283faf5f372b5efdcfe",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"wrong.email@reqres.in\",\n    \"password\": \"wrongpassword\"\n}"
+            },
+            "url": {
+              "raw": "https://reqres.in/api/login",
+              "protocol": "https",
+              "host": [
+                "reqres",
+                "in"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Sends unregistered credentials. Asserts 400 and error field, no token."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-03: Missing Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-03 | Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC-03 | Response time is under 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('TC-03 | Content-Type is application/json', function () {",
+                  "    pm.response.to.have.header('Content-Type');",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('TC-03 | Response body contains an error field', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test('TC-03 | Error message is \"Missing password\"', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error).to.equal('Missing password');",
+                  "});",
+                  "",
+                  "pm.test('TC-03 | Response does NOT contain a token', function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "inherit"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "pub_215d1baef769f99ff76f945d9f30354ca5e77a800e2eb283faf5f372b5efdcfe",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"eve.holt@reqres.in\"\n}"
+            },
+            "url": {
+              "raw": "https://reqres.in/api/login",
+              "protocol": "https",
+              "host": [
+                "reqres",
+                "in"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Sends email only (no password). Asserts 400 and 'Missing password' error."
+          },
+          "response": []
+        },
+        {
+          "name": "TC-04: Missing Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-04 | Status code is 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('TC-04 | Response time is under 3000ms', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test('TC-04 | Content-Type is application/json', function () {",
+                  "    pm.response.to.have.header('Content-Type');",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+                  "});",
+                  "",
+                  "pm.test('TC-04 | Response body contains an error field', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});",
+                  "",
+                  "pm.test('TC-04 | Error message is \"Missing email or username\"', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.error).to.equal('Missing email or username');",
+                  "});",
+                  "",
+                  "pm.test('TC-04 | Response does NOT contain a token', function () {",
+                  "    pm.expect(pm.response.json()).to.not.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "inherit"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "x-api-key",
+                "value": " pub_1bd77c29cbd685408d84bea34dc86d33",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"password\": \"cityslicka\"\n}"
+            },
+            "url": {
+              "raw": "https://reqres.in/api/login",
+              "protocol": "https",
+              "host": [
+                "reqres",
+                "in"
+              ],
+              "path": [
+                "api",
+                "login"
+              ]
+            },
+            "description": "Sends password only (no email). Asserts 400 and 'Missing email or username' error."
+          },
+          "response": []
+        }
+      ],
+      "description": "All test cases targeting POST /api/login"
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "x-api-key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{api_key}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "api_key",
+      "value": "pub_1bd77c29cbd685408d84bea34dc86d33"
+    },
+    {
+      "key": "base_url",
+      "value": "https://reqres.in"
+    }
+  ]
+}
