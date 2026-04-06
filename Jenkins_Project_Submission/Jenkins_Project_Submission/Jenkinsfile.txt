@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Clone Code') {
+            steps {
+                git 'https://github.com/Subha89844/Assignment.git'
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('JavaSeleniumProject') {
+                    bat 'mvn clean test'
+                }
+            }
+        }
+
+        stage('Run Postman Tests') {
+            steps {
+                bat '''
+                npm install -g newman
+                newman run "ReqRes User Authentication API Tests.postman_collection.json"
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/JavaSeleniumProject/target/surefire-reports/*.xml'
+        }
+    }
+}
